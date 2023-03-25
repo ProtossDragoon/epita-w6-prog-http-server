@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "ttt_server build by Makefile",
+            "type": "shell",
+            "command": "cd ttt_server && make clean && make",
+        },
+        {
+            "label": "web_server build by Makefile",
+            "type": "shell",
+            "command": "cd web_server && make clean && make",
+        },
+    ]
+}

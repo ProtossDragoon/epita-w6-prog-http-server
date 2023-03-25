@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "debug: ttt_server",
+            "program": "${workspaceFolder}/ttt_server",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "ttt_server build by Makefile",
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "debug: web_server",
+            "program": "${workspaceFolder}/web_server",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "web_server build by Makefile",
+        },
+    ]
+}
