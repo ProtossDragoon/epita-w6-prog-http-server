@@ -4,6 +4,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <err.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <glib.h>
 
@@ -19,6 +20,42 @@ void rewrite(int fd, const void *buf, size_t count)
         p_buf += n_written;
         left -= n_written;
     } while (left > 0);
+}
+
+void resend(int fd, const void *buf, size_t count)
+{
+    int flag = count == 0 ? 0 : MSG_MORE;
+    if (flag == 0) {
+	// Explicitly make an end singal.
+        int err = send(fd, "", count, flag);
+	if (err == -1) {
+	    errx(-1, "send()\n");
+	}
+	return;
+    }
+    int left = count;
+    void* p_buf = (char*) buf;
+    do {
+        int n_written = send(fd, buf, count, flag);
+        if (n_written == -1) {
+            errx(-1, "send()\n");
+        }
+        p_buf += n_written;
+        left -= n_written;
+    } while (left > 0);
+}
+
+void echo(int fd_in, int fd_out)
+{
+    char buf[128];
+    int n_read = 1;
+    do {
+        n_read = read(fd_in, buf, 128);
+        if (n_read == -1) {
+            errx(-1, "read()");
+        }
+        resend(fd_out, buf, n_read);
+    } while (n_read > 0);
 }
 
 gchar* parsersc(int fd_in, gboolean print_stdout)
@@ -51,7 +88,18 @@ gchar* parsersc(int fd_in, gboolean print_stdout)
     }
     gchar* rsc = g_strndup(p_rsc, rsc_len);
     if (print_stdout) {
-        g_print("Resource = %s\n", rsc);
+        g_print("%d: ", fd_in);
+        if (strlen(rsc)) {
+            g_print("%s\n", rsc);
+	    if (strcmp(rsc, "slow.html") == 0) {
+                // Simulated slow condition
+                printf("%d: Sleeping for 10 seconds...\n", fd_in);
+                sleep(10);
+            }
+	}
+	else {
+	    g_print("index.html\n");
+	}
     }
     g_string_free(req, TRUE);
     return rsc;
@@ -73,42 +121,25 @@ gchar* getfname(const gchar* rsc)
     return ret;
 }
 
-gchar* getcontent(const gchar* fpath)
+void sendres(const gchar* fpath, int accepted_sfd)
 {
-    GString *content = g_string_new("");
-    if (strcmp(fpath, "www/index.html") == 0) {
-        // FIXME: actual file content should be here
-        g_string_append(content, fpath);
-    }
-    else if (strcmp(fpath, "www/favicon.ico") == 0) {
-
-    }
-    else if (strcmp(fpath, "www/hello.html") == 0) {
-
-    }
+    gchar protocol[] = "HTTP/1.1 ";
+    resend(accepted_sfd, protocol, strlen(protocol));
+    int fd = open(fpath, O_RDONLY);
+    if (fd == -1) {
+        gchar notfound[] = "404 Not Found\r\n\r\n"; 
+        resend(accepted_sfd, notfound, strlen(notfound));
+	gchar *msg;
+	asprintf(&msg, "Resource %s Not Found", fpath);
+	rewrite(accepted_sfd, msg, strlen(msg));
+	free(msg);
+    } 
     else {
-        content->str = NULL;
+        gchar ok[] = "200 OK\r\n\r\n";
+        resend(accepted_sfd, ok, strlen(ok));
+        echo(fd, accepted_sfd);
     }
-    gchar* ret = content->str;
-    g_string_free(content, FALSE);
-    return ret;
-}
-
-gchar* getres(const gchar* fpath)
-{
-    gchar* res;
-    gchar* content; 
-    gchar protocol[] = "HTTP/1.1";
-
-    content = getcontent(fpath);
-    if (content == NULL) {
-        asprintf(&res, "%s 404 Not Found\r\n\r\n%s not found", protocol, fpath);
-    }
-    else {
-        asprintf(&res, "%s 200 OK\r\n\r\n%s", protocol, content);
-    }
-    g_free(content);
-    return res;
+    close(fd);
 }
 
 int main()
@@ -158,7 +189,6 @@ int main()
     printf("Listening to port 2048...\n");
     gchar* rsc = NULL;
     gchar* fname = NULL;
-    gchar* res = NULL;
     while (1) {
         int accepted_sfd = accept(sfd, NULL, NULL);
 	if (accepted_sfd == -1) {
@@ -167,11 +197,9 @@ int main()
 	}
         rsc = parsersc(accepted_sfd, TRUE);
 	fname = getfname(rsc);
-	res = getres(fname);
-	rewrite(accepted_sfd, res, strlen(res));
+        sendres(fname, accepted_sfd);
         g_free(rsc);
 	g_free(fname);
-	g_free(res);
         close(accepted_sfd);
     }
     close(sfd);
