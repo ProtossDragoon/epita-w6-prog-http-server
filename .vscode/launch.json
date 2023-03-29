@@ -4,20 +4,38 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "debug: web_server/print_request",
+            "program": "${workspaceFolder}/print_request",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "web_server build by Makefile",
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "debug: web_server/single_threaded",
+            "program": "${workspaceFolder}/single_threaded",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "web_server build by Makefile",
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "debug: web_server/multithreaded",
+            "program": "${workspaceFolder}/multithreaded",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "web_server build by Makefile",
+        },                
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "debug: ttt_server",
             "program": "${workspaceFolder}/ttt_server",
             "args": [],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "ttt_server build by Makefile",
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "debug: web_server",
-            "program": "${workspaceFolder}/web_server",
-            "args": [],
-            "cwd": "${workspaceFolder}",
-            "preLaunchTask": "web_server build by Makefile",
-        },
+        }
     ]
 }
