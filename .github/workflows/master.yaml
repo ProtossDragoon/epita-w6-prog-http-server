@@ -1,0 +1,30 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+
+  workflow_dispatch:
+
+jobs:
+  web_server:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: 체크아웃
+        uses: actions/checkout@v2
+
+      - name: 빌드
+        run: cd web_server && make
+
+  ttt_server:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: 체크아웃
+        uses: actions/checkout@v2
+
+      - name: 빌드
+        run: cd ttt_server && make
