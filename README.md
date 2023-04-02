@@ -82,7 +82,7 @@ Listening to port 2048...
 
 ### ttt_server
 
-demo video
+![](./.readme/video.gif)
 
 ```bash
 $ cd ttt_server && make && ./ttt_server
