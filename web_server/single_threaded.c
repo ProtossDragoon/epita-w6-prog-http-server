@@ -130,7 +130,7 @@ void sendres(const gchar* fpath, int accepted_sfd)
         gchar notfound[] = "404 Not Found\r\n\r\n"; 
         resend(accepted_sfd, notfound, strlen(notfound));
 	gchar *msg;
-	asprintf(&msg, "Resource %s Not Found", fpath);
+	asprintf(&msg, "404 Not Found: Resource %s Not Found", fpath);
 	rewrite(accepted_sfd, msg, strlen(msg));
 	free(msg);
     } 
